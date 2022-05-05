@@ -1,0 +1,113 @@
+<?php
+/**
+ * @var \Skfz\Sales\Block\Invoice $block
+ */
+    $invoice = $block->getInvoice();
+    $order = $block->getOrder();
+    $address = $block->getOrderAddress();
+    $createTimeStamp = strtotime($order->getCreatedAt());
+?>
+<input type="button" value="Print invoice" onclick="printDiv();" />
+<div id="invoice">
+    <div style="width:900px;margin:auto;padding:50px;">
+        <div style="margin-bottom:20px;">
+            <h2 style="font-weight:bold;">INVOICE</h2>
+            <p>ABC Company</p>
+            <p>United States</p>
+            <p>P.O Box 2111</p>
+        </div>
+        <div style="display:flex;flex-direction:row;margin-bottom:40px;">
+            <div style="width:70%;">
+                <p><b>Shipping Address</b></p>
+                <p><?php echo $address->getName() ?></p>
+                <p><?php echo $address->getEmail() ?></p>
+                <p><?php echo $address->getTelephone() ?></p>
+                <p><?php echo implode(PHP_EOL, $address->getStreet()) ?></p>
+                <p><?php echo $address->getCity() ?></p>
+            </div>
+            <div style="width:30%;">
+                <p><b>Invoice No.</b>&nbsp;<?php echo $invoice->getIncrementId();?></p>
+                <p><b>Order No.</b>&nbsp;<?php echo $order->getRealOrderId();?></p>
+                <p><b>Order Date</b>&nbsp;<?php echo date('d/m/Y', $createTimeStamp); ?></p>
+                <p><b>Payment method</b>&nbsp;<?php echo $block->getPaymentMethod();?></p>
+            </div>
+        </div>
+        <div style="display:flex;flex-direction:row;flex-wrap:wrap;border-bottom:1px solid #000;padding-bottom:5px;gap:15px;justify-content:space-between;">
+            <div style="font-weight:bold;width:2%;">No.</div>
+            <div style="font-weight:bold;width:20%;">Products</div>
+            <div style="font-weight:bold;width:18%;">Description</div>
+            <div style="font-weight:bold;width:10%;text-align:center;">Quantity</div>
+            <div style="font-weight:bold;width:10%;text-align:right;">Price</div>
+        </div>
+        <div style="display:flex;flex-direction:row;flex-wrap:wrap; padding:10px 0;gap:15px;justify-content:space-between;">
+        <?php 
+            $i=1;
+            $totalQty = 0;
+            foreach ($block->getInvoiceItems() as $item) {
+                if ($item->getOrderItem()->getParentItem()) {
+                    continue;
+                }
+                $qty = intval($item->getQty());
+                $totalQty += $qty;
+                $price = $item->getPrice();
+                $productOptions = $block->formatProductOptions($item->getOrderItem()->getProductOptions());
+        ?>
+            <div style="width:2%;"><?php echo $i;?></div>
+            <div style="width:20%;">
+                <h4 style="margin:0 0 5px;"><?php echo $item->getName();?></h4>
+                <p style="font-size:1.2rem"><?php echo $item->getSku();?></p>
+            </div>
+            <div style="width:18%;">
+                <?php foreach($productOptions as $key => $val) {?>
+                    <p><?php echo $key?>:&nbsp;<?php echo $val?>
+                <?php } ?>
+            </div>
+            <div style="width:10%;text-align:center;"><?php echo $qty;?></div>
+            <div style="width:10%;text-align:right;"><?php echo $order->formatPriceTxt($price);?></div>
+        <?php
+            $i++;
+            }
+        ?>
+        </div>
+        <div><hr style="height:1px;border:0;border-top:1px solid #000;"></div>
+        <div style="display:flex;flex-direction:row;flex-wrap:wrap; padding:10px 0;gap:15px;justify-content:space-between;">
+            <div style="width:42%;text-align:right;"><b>Total Quantity</b></div>
+            <div style="width:10%;text-align:center"><?php echo $totalQty; ?></div>
+            <div style="width:20%;text-align:right"><b>Total before VAT</b></div>
+            <div style="width:15%;text-align:right"><?php echo $order->formatPriceTxt($invoice->getSubtotal());?></div>
+        </div>
+        <div style="display:flex;flex-direction:row;flex-wrap:wrap;">
+            <?php if ((double)$invoice->getDiscountAmount() != 0) {?>
+                <div style="width:81%;text-align:right;padding-bottom:10px;"><b>Discount code <?php echo $invoice->getDiscountDescription() ?></b></div>
+                <div style="width:19%;text-align:right;padding-bottom:10px;"><?php echo $order->formatPriceTxt($invoice->getDiscountAmount());?></div>
+            <?php } ?>
+            <?php if ($invoice->getShippingAmount()) {?>
+                <div style="width:81%;text-align:right;padding-bottom:10px;"><b>Shipping</b></div>
+                <div style="width:19%;text-align:right;padding-bottom:10px;"><?php echo $order->formatPriceTxt($invoice->getShippingAmount());?></div>
+            <?php } ?>
+            <?php if ($invoice->getTaxAmount()) {?>
+                <div style="width:81%;text-align:right;padding-bottom:10px;"><b>TAX</b></div>
+                <div style="width:19%;text-align:right;padding-bottom:10px;"><?php echo $order->formatPriceTxt($invoice->getTaxAmount());?></div>
+            <?php } ?>
+            <div style="width:81%;text-align:right;padding-bottom:10px;"><b>Grand Total</b></div>
+            <div style="width:19%;text-align:right;padding-bottom:10px;"><?php echo $order->formatPriceTxt($invoice->getGrandTotal());?></div>
+        </div>
+        <div style="margin-top:40px;">
+            <h4>Return Policy</h4>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+    </div>
+</div>
+<script>
+    function printDiv() {
+        var divElementContents = document.getElementById("invoice").innerHTML;
+        var printWindow = window.open();
+        printWindow.document.write('<html>');
+        printWindow.document.write('<body>');
+        printWindow.document.write(divElementContents);
+        printWindow.document.write('</body></html>');
+        printWindow.document.title = 'ABC_Invoice_' + <?php echo $invoice->getIncrementId()?>;
+        printWindow.document.close();
+        printWindow.print();
+    }
+</script>
