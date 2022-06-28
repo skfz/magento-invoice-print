@@ -7,8 +7,26 @@
     $address = $block->getOrderAddress();
     $createTimeStamp = strtotime($order->getCreatedAt());
 ?>
-<input type="button" value="Print invoice" onclick="printDiv();" />
-<div id="invoice">
+<input type="button" value="Print invoice" onclick="window.print();" />
+<div id="printarea">
+<style>
+    p {
+        font-size: 16px;
+        margin: 0 0 5px;
+    }
+    a {font-size: 16px;text-decoration:none; color:inherit;}
+    @media print {
+        body * { visibility:hidden; }
+        .notices-wrapper, .page-header {display:none;}
+        .menu-wrapper._fixed ~ .page-wrapper {margin-left:0;}
+        #printarea, #printarea * { visibility:visible; }
+        
+        p, a, h4 {font-size: 18px;}
+        a[href]:after {
+        content: none !important;
+        }
+    }
+</style>
     <div style="width:900px;margin:auto;padding:50px;">
         <div style="margin-bottom:20px;">
             <h2 style="font-weight:bold;">INVOICE</h2>
@@ -43,10 +61,7 @@
         <?php 
             $i=1;
             $totalQty = 0;
-            foreach ($block->getInvoiceItems() as $item) {
-                if ($item->getOrderItem()->getParentItem()) {
-                    continue;
-                }
+            foreach ($invoice->getItems() as $item) {
                 $qty = intval($item->getQty());
                 $totalQty += $qty;
                 $price = $item->getPrice();
@@ -98,16 +113,3 @@
         </div>
     </div>
 </div>
-<script>
-    function printDiv() {
-        var divElementContents = document.getElementById("invoice").innerHTML;
-        var printWindow = window.open();
-        printWindow.document.write('<html>');
-        printWindow.document.write('<body>');
-        printWindow.document.write(divElementContents);
-        printWindow.document.write('</body></html>');
-        printWindow.document.title = 'ABC_Invoice_' + <?php echo $invoice->getIncrementId()?>;
-        printWindow.document.close();
-        printWindow.print();
-    }
-</script>

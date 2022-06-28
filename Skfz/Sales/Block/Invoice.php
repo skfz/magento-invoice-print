@@ -24,12 +24,6 @@ class Invoice extends \Magento\Framework\View\Element\Template {
 		return $this->_invoice;
 	}
 
-	public function getInvoiceItems() {
-		$invoice = $this->getInvoice();
-
-		return $invoice->getAllItems();
-	}
-
 	public function getOrder() {
 		$invoice = $this->getInvoice();
 		
