@@ -14,3 +14,5 @@ bin/magento setup:di:compile
 bin/magento setup:static-content:deploy
 ```
 
+Magento version: 2.4+
+
